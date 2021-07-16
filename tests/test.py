@@ -5,19 +5,19 @@ import pprint
 # import os
 pp = pprint.PrettyPrinter(indent=4)
 
+def _gen_value():
+    return random.randint(0, 65535).to_bytes(2, 'little')
 
 def initDefaultData(dbm):
     # warming up
     for i in range(0, 100):
         k = str(i)
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         dbm.store(k, v, mdbm.MDBM_REPLACE)
 
     for i in range(0, 100):
-        v = str(random.randint(0, 65535))
         dbm.fetch(k)
 
-    v = str(random.randint(0, 2))
     dbm.delete(k)
 
 
@@ -67,19 +67,19 @@ class TestMDBMMethods(unittest.TestCase):
     def test_02_store_fetch(self):
 
         k = str(1)
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
 
         k = str(2)
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
 
         k = str(3)
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
@@ -89,7 +89,7 @@ class TestMDBMMethods(unittest.TestCase):
 
     def test_02_store_r_fetch_r(self):
         k = "02"
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store_r(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "rv=%s" % rv)
 
@@ -99,12 +99,12 @@ class TestMDBMMethods(unittest.TestCase):
     def test_02_fetch_dup_r(self):
 
         k = "02"
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_INSERT_DUP)
         self.assertTrue(rv, "rv=%s" % rv)
 
         k = "02"
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_INSERT_DUP)
         self.assertTrue(rv, "rv=%s" % rv)
 
@@ -120,19 +120,19 @@ class TestMDBMMethods(unittest.TestCase):
     def test_02_fetch_info(self):
 
         k = str(1)
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
 
         k = str(2)
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
 
         k = str(3)
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
@@ -258,7 +258,7 @@ class TestMDBMMethods(unittest.TestCase):
         self.assertTrue(rv, "rv=%s" % rv)
 
         k = str(random.randint(0, 65535))
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
@@ -325,7 +325,7 @@ class TestMDBMMethods(unittest.TestCase):
         rv = self.dbm.get_lockmode()
         self.assertTrue((rv >= 0))
 
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
@@ -342,7 +342,7 @@ class TestMDBMMethods(unittest.TestCase):
         rv = self.dbm.get_lockmode()
         self.assertTrue((rv >= 0))
 
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
@@ -359,7 +359,7 @@ class TestMDBMMethods(unittest.TestCase):
         rv = self.dbm.get_lockmode()
         self.assertTrue((rv >= 0))
 
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
@@ -376,7 +376,7 @@ class TestMDBMMethods(unittest.TestCase):
         rv = self.dbm.get_lockmode()
         self.assertTrue((rv >= 0))
 
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))
@@ -397,7 +397,7 @@ class TestMDBMMethods(unittest.TestCase):
         rv = self.dbm_prot.get_lockmode()
         self.assertTrue((rv >= 0))
 
-        v = str(random.randint(0, 65535))
+        v = _gen_value()
         rv = self.dbm_prot.store(k, v, mdbm.MDBM_REPLACE)
         self.assertTrue(rv, "failred to store, \
         rv=%d, key=%s, val=%s" % (rv, k, v))

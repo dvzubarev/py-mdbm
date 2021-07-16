@@ -1,4 +1,6 @@
 // https://github.com/torden
+#define PY_SSIZE_T_CLEAN
+
 #include <stdio.h>
 #include <Python.h>
 #include "libmdbm.h"
@@ -924,6 +926,7 @@ PyObject *pymdbm_store(register MDBMObj *pmdbm_link, PyObject *args, PyObject *k
 
     char *pkey = NULL;
     char *pval = NULL;
+    Py_ssize_t klen, vlen;
     int flags = MDBM_INSERT;
 
     int rv = -1;
@@ -931,7 +934,7 @@ PyObject *pymdbm_store(register MDBMObj *pmdbm_link, PyObject *args, PyObject *k
     datum val = {0x00,};
 
     static char *pkwlist[] = {"key", "val", "flags", NULL};
-    rv = PyArg_ParseTupleAndKeywords(args, kwds, "ss|i", pkwlist, &pkey, &pval, &flags);
+    rv = PyArg_ParseTupleAndKeywords(args, kwds, "s#y#|i", pkwlist, &pkey, &klen, &pval, &vlen, &flags);
     if (!rv) {
         PyErr_SetString(MDBMError, "Error - There was a missing parameter: key and value");
         return NULL;
@@ -939,9 +942,9 @@ PyObject *pymdbm_store(register MDBMObj *pmdbm_link, PyObject *args, PyObject *k
 
     //make a datum
     key.dptr = pkey;
-    key.dsize = (int)strlen(pkey);
+    key.dsize = klen;
     val.dptr = pval;
-    val.dsize = (int)strlen(pval);
+    val.dsize = vlen;
 
     CAPTURE_START();
     rv = mdbm_store(pmdbm_link->pmdbm, key, val, (int)flags);
@@ -964,6 +967,7 @@ PyObject *pymdbm_store_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
 
     char *pkey = NULL;
     char *pval = NULL;
+    Py_ssize_t klen, vlen;
     int flags = MDBM_INSERT;
     PyObject *previter = NULL;
     PyObject *pretdic = NULL;
@@ -976,7 +980,8 @@ PyObject *pymdbm_store_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
     datum val = {0x00,};
 
     static char *pkwlist[] = {"key", "val", "flags", "iter", NULL};
-    rv = PyArg_ParseTupleAndKeywords(args, kwds, "ss|iO", pkwlist, &pkey, &pval, &flags, &previter);
+    rv = PyArg_ParseTupleAndKeywords(args, kwds, "s#y#|iO", pkwlist, &pkey, &klen, &pval, &vlen,
+                                     &flags, &previter);
     if (!rv) {
         PyErr_SetString(MDBMError, "Error - There was a missing parameter: key and value");
         return NULL;
@@ -990,9 +995,9 @@ PyObject *pymdbm_store_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
 
     //make a datum
     key.dptr = pkey;
-    key.dsize = (int)strlen(pkey);
+    key.dsize = klen;
     val.dptr = pval;
-    val.dsize = (int)strlen(pval);
+    val.dsize = vlen;
 
     CAPTURE_START();
     rv = mdbm_store_r(pmdbm_link->pmdbm, &key, &val, (int)flags, parg_iter);
@@ -1021,12 +1026,13 @@ PyObject *pymdbm_store_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
 PyObject *pymdbm_fetch(register MDBMObj *pmdbm_link, PyObject *args) {
 
     char *pkey = NULL;
+    Py_ssize_t klen;
 
     int rv = -1;
     datum key = {0x00,};
     datum val = {0x00,};
 
-    rv = PyArg_ParseTuple(args, "s", &pkey);
+    rv = PyArg_ParseTuple(args, "s#", &pkey, &klen);
     if (!rv) {
         PyErr_SetString(MDBMError, "Error - There was a missing parameter: string(key)");
         return NULL;
@@ -1034,7 +1040,7 @@ PyObject *pymdbm_fetch(register MDBMObj *pmdbm_link, PyObject *args) {
 
     //make a datum
     key.dptr = pkey;
-    key.dsize = (int)strlen(pkey);
+    key.dsize = klen;
 
     CAPTURE_START();
     val = mdbm_fetch(pmdbm_link->pmdbm, key);
@@ -1044,13 +1050,14 @@ PyObject *pymdbm_fetch(register MDBMObj *pmdbm_link, PyObject *args) {
         _RETURN_FALSE();
     }
  
-    return _PYUNICODE_ANDSIZE(val.dptr, val.dsize);
+    return PyBytes_FromStringAndSize(val.dptr, val.dsize);
 }
 
 
 PyObject *pymdbm_fetch_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject *kwds) {
 
     char *pkey = NULL;
+    Py_ssize_t klen;
 
     int rv = -1;
     datum key = {0x00,};
@@ -1063,7 +1070,7 @@ PyObject *pymdbm_fetch_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
     PyObject *pretdic = NULL;
 
     static char *pkwlist[] = {"key", "iter", NULL};
-    rv = PyArg_ParseTupleAndKeywords(args, kwds, "s|O", pkwlist, &pkey, &previter);
+    rv = PyArg_ParseTupleAndKeywords(args, kwds, "s#|O", pkwlist, &pkey, &klen, &previter);
     if (!rv) {
         PyErr_SetString(MDBMError, "Error - There was a missing parameter: str(key)");
         return NULL;
@@ -1077,7 +1084,7 @@ PyObject *pymdbm_fetch_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
 
     //make a datum
     key.dptr = pkey;
-    key.dsize = (int)strlen(pkey);
+    key.dsize = klen;
 
     CAPTURE_START();
     rv = mdbm_fetch_r(pmdbm_link->pmdbm, &key, &val, parg_iter);
@@ -1097,7 +1104,7 @@ PyObject *pymdbm_fetch_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
         _RETURN_FALSE();
     }
 
-    rv = PyDict_SetItemString(pretdic, "val", _PYUNICODE_ANDSIZE(val.dptr, val.dsize));
+    rv = PyDict_SetItemString(pretdic, "val", PyBytes_FromStringAndSize(val.dptr, val.dsize));
     if (rv == -1) {
         PyErr_Format(PyExc_IOError, "mdbm::fetch_r does not make a return value (val)");
         _RETURN_FALSE();
@@ -1111,6 +1118,7 @@ PyObject *pymdbm_fetch_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
 PyObject *pymdbm_fetch_dup_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject *kwds) {
 
     char *pkey = NULL;
+    Py_ssize_t klen;
 
     int rv = -1;
     datum key = {0x00,};
@@ -1122,7 +1130,7 @@ PyObject *pymdbm_fetch_dup_r(register MDBMObj *pmdbm_link, PyObject *args, PyObj
     PyObject *pretdic = NULL;
 
     static char *pkwlist[] = {"key", "iter", NULL};
-    rv = PyArg_ParseTupleAndKeywords(args, kwds, "s|O", pkwlist, &pkey, &previter);
+    rv = PyArg_ParseTupleAndKeywords(args, kwds, "s#|O", pkwlist, &pkey, &klen, &previter);
     if (!rv) {
         PyErr_SetString(MDBMError, "Error - There was a missing parameter: str(key) and dict(iter{m_pageno,mnext})");
         return NULL;
@@ -1136,7 +1144,7 @@ PyObject *pymdbm_fetch_dup_r(register MDBMObj *pmdbm_link, PyObject *args, PyObj
 
     //make a datum
     key.dptr = pkey;
-    key.dsize = (int)strlen(pkey);
+    key.dsize = klen;
 
     CAPTURE_START();
     rv = mdbm_fetch_dup_r(pmdbm_link->pmdbm, &key, &val, parg_iter);
@@ -1156,7 +1164,7 @@ PyObject *pymdbm_fetch_dup_r(register MDBMObj *pmdbm_link, PyObject *args, PyObj
         _RETURN_FALSE();
     }
 
-    rv = PyDict_SetItemString(pretdic, "val", _PYUNICODE_ANDSIZE(val.dptr, val.dsize));
+    rv = PyDict_SetItemString(pretdic, "val", PyBytes_FromStringAndSize(val.dptr, val.dsize));
     if (rv == -1) {
         PyErr_Format(PyExc_IOError, "mdbm::fetch_dup_r does not make a return value (val)");
         _RETURN_FALSE();
@@ -1170,6 +1178,7 @@ PyObject *pymdbm_fetch_dup_r(register MDBMObj *pmdbm_link, PyObject *args, PyObj
 PyObject *pymdbm_fetch_info(register MDBMObj *pmdbm_link, PyObject *args, PyObject *kwds) {
 
     char *pkey = NULL;
+    Py_ssize_t klen;
 
     int rv = -1;
     char locbuf[8192] = {0x00,};
@@ -1188,7 +1197,7 @@ PyObject *pymdbm_fetch_info(register MDBMObj *pmdbm_link, PyObject *args, PyObje
     PyObject *x_flags, *x_cna, *x_cat;
 
     static char *pkwlist[] = {"key", "iter", NULL};
-    rv = PyArg_ParseTupleAndKeywords(args, kwds, "s|O", pkwlist, &pkey, &previter);
+    rv = PyArg_ParseTupleAndKeywords(args, kwds, "s#|O", pkwlist, &pkey, &klen, &previter);
     if (!rv) {
         PyErr_SetString(MDBMError, "Error - There was a missing parameter: str(key) and dict(iter{m_pageno,mnext})");
         return NULL;
@@ -1202,7 +1211,7 @@ PyObject *pymdbm_fetch_info(register MDBMObj *pmdbm_link, PyObject *args, PyObje
 
     //make a datum
     key.dptr = pkey;
-    key.dsize = (int)strlen(pkey);
+    key.dsize = klen;
 
     //init.
     val.dptr = 0;
@@ -1280,7 +1289,7 @@ PyObject *pymdbm_fetch_info(register MDBMObj *pmdbm_link, PyObject *args, PyObje
         _RETURN_FALSE();
     }
 
-    rv = PyDict_SetItemString(pretdic, "val", _PYUNICODE_ANDSIZE(val.dptr, val.dsize));
+    rv = PyDict_SetItemString(pretdic, "val", PyBytes_FromStringAndSize(val.dptr, val.dsize));
     if (rv == -1) {
         PyErr_Format(PyExc_IOError, "mdbm::fetch_info does not make a return value (val)");
         Py_DECREF(pretdic);
@@ -1792,8 +1801,8 @@ PyObject *pymdbm_first(register MDBMObj *pmdbm_link, PyObject *unused) {
 
     kvpair kv;
     PyObject *retval;
-    char *pretkey;
-    char *pretval;
+    PyObject *pretkey;
+    PyObject *pretval;
 
     CAPTURE_START();
     kv = mdbm_first(pmdbm_link->pmdbm);
@@ -1802,22 +1811,20 @@ PyObject *pymdbm_first(register MDBMObj *pmdbm_link, PyObject *unused) {
         _RETURN_FALSE();
     }
 
-    pretkey = copy_strptr(kv.key.dptr, kv.key.dsize);
+    pretkey = PyBytes_FromStringAndSize(kv.key.dptr, kv.key.dsize);
     if (pretkey == NULL) {
         _RETURN_FALSE();
     }
 
-    pretval = copy_strptr(kv.val.dptr, kv.val.dsize);
+    pretval = PyBytes_FromStringAndSize(kv.val.dptr, kv.val.dsize);
     if (pretval == NULL) {
+        Py_DECREF(pretkey);
         _RETURN_FALSE();
     }
 
     retval = PyTuple_New(2);
-    PyTuple_SetItem(retval, 0, _PYUNICODE(pretkey));
-    PyTuple_SetItem(retval, 1, _PYUNICODE(pretval));
-
-    PyMem_Free(pretkey);
-    PyMem_Free(pretval);
+    PyTuple_SetItem(retval, 0, pretkey);
+    PyTuple_SetItem(retval, 1, pretval);
 
     return retval;
 }
@@ -1826,8 +1833,8 @@ PyObject *pymdbm_next(register MDBMObj *pmdbm_link, PyObject *unused) {
 
     kvpair kv;
     PyObject *retval;
-    char *pretkey;
-    char *pretval;
+    PyObject *pretkey;
+    PyObject *pretval;
 
     CAPTURE_START();
     kv = mdbm_next(pmdbm_link->pmdbm);
@@ -1836,22 +1843,21 @@ PyObject *pymdbm_next(register MDBMObj *pmdbm_link, PyObject *unused) {
         _RETURN_FALSE();
     }
 
-    pretkey = copy_strptr(kv.key.dptr, kv.key.dsize);
+    pretkey = PyBytes_FromStringAndSize(kv.key.dptr, kv.key.dsize);
     if (pretkey == NULL) {
         _RETURN_FALSE();
     }
 
-    pretval = copy_strptr(kv.val.dptr, kv.val.dsize);
+    pretval = PyBytes_FromStringAndSize(kv.val.dptr, kv.val.dsize);
     if (pretval == NULL) {
+        Py_DECREF(pretkey);
         _RETURN_FALSE();
     }
 
     retval = PyTuple_New(2);
-    PyTuple_SetItem(retval, 0, _PYUNICODE(pretkey));
-    PyTuple_SetItem(retval, 1, _PYUNICODE(pretval));
+    PyTuple_SetItem(retval, 0, pretkey);
+    PyTuple_SetItem(retval, 1, pretval);
     
-    PyMem_Free(pretkey);
-    PyMem_Free(pretval);
     return retval;
 }
 
@@ -1859,7 +1865,7 @@ PyObject *pymdbm_firstkey(register MDBMObj *pmdbm_link, PyObject *unused) {
 
     datum key = {0x00,};
     PyObject *retval;
-    char *pretkey;
+    PyObject *pretkey;
 
     CAPTURE_START();
     key = mdbm_firstkey(pmdbm_link->pmdbm);
@@ -1868,16 +1874,15 @@ PyObject *pymdbm_firstkey(register MDBMObj *pmdbm_link, PyObject *unused) {
         _RETURN_FALSE();
     }
 
-    pretkey = copy_strptr(key.dptr, key.dsize);
+    pretkey = PyBytes_FromStringAndSize(key.dptr, key.dsize);
     if (pretkey == NULL) {
         _RETURN_FALSE();
     }
 
 
     retval = PyTuple_New(1);
-    PyTuple_SetItem(retval, 0, _PYUNICODE(pretkey));
+    PyTuple_SetItem(retval, 0, pretkey);
 
-    PyMem_Free(pretkey);
     //Py_DECREF(retval);
 
     return retval;
@@ -1887,7 +1892,7 @@ PyObject *pymdbm_nextkey(register MDBMObj *pmdbm_link, PyObject *unused) {
 
     datum key = {0x00,};
     PyObject *retval;
-    char *pretkey;
+    PyObject *pretkey;
 
     CAPTURE_START();
     key = mdbm_nextkey(pmdbm_link->pmdbm);
@@ -1896,15 +1901,14 @@ PyObject *pymdbm_nextkey(register MDBMObj *pmdbm_link, PyObject *unused) {
         _RETURN_FALSE();
     }
 
-    pretkey = copy_strptr(key.dptr, key.dsize);
+    pretkey = PyBytes_FromStringAndSize(key.dptr, key.dsize);
     if (pretkey == NULL) {
         _RETURN_FALSE();
     }
 
 
     retval = PyTuple_New(1);
-    PyTuple_SetItem(retval, 0, _PYUNICODE(pretkey));
-    PyMem_Free(pretkey);
+    PyTuple_SetItem(retval, 0, pretkey);
     //Py_DECREF(retval);
 
     return retval;
@@ -1918,8 +1922,8 @@ PyObject *pymdbm_first_r(register MDBMObj *pmdbm_link, PyObject *args) {
     MDBM_ITER arg_iter;
     MDBM_ITER *parg_iter = &arg_iter;
     kvpair kv;
-    char *pretkey = NULL;
-    char *pretval = NULL;
+    PyObject *pretkey = NULL;
+    PyObject *pretval = NULL;
 
     rv = PyArg_ParseTuple(args, "|O", &previter);
     if (!rv) {
@@ -1946,30 +1950,36 @@ PyObject *pymdbm_first_r(register MDBMObj *pmdbm_link, PyObject *args) {
         _RETURN_FALSE();
     }
 
-    pretkey = copy_strptr(kv.key.dptr, kv.key.dsize);
+    pretkey = PyBytes_FromStringAndSize(kv.key.dptr, kv.key.dsize);
     if (pretkey == NULL) {
         _RETURN_FALSE();
     }
 
-    pretval = copy_strptr(kv.val.dptr, kv.val.dsize);
+    pretval = PyBytes_FromStringAndSize(kv.val.dptr, kv.val.dsize);
     if (pretval == NULL) {
+        Py_DECREF(pretkey);
         _RETURN_FALSE();
     }
 
     //make a return value include iter
     pretdic = get_iter_dict(parg_iter);
     if (pretdic == NULL) {
+        Py_DECREF(pretkey);
+        Py_DECREF(pretval);
         _RETURN_FALSE();
     }
 
-    rv = PyDict_SetItemString(pretdic, "key", _PYUNICODE_ANDSIZE(kv.key.dptr, kv.key.dsize));
+    rv = PyDict_SetItemString(pretdic, "key", pretkey);
+    Py_DECREF(pretkey);
     if (rv == -1) {
         PyErr_Format(PyExc_IOError, "mdbm::first_r does not make a return value (key)");
+        Py_DECREF(pretval);
         _RETURN_FALSE();
     }
 
 
-    rv = PyDict_SetItemString(pretdic, "val", _PYUNICODE_ANDSIZE(kv.val.dptr, kv.val.dsize));
+    rv = PyDict_SetItemString(pretdic, "val", pretval);
+    Py_DECREF(pretval);
     if (rv == -1) {
         PyErr_Format(PyExc_IOError, "mdbm::first_r does not make a return value (val)");
         _RETURN_FALSE();
@@ -1988,8 +1998,8 @@ PyObject *pymdbm_next_r(register MDBMObj *pmdbm_link, PyObject *args) {
     MDBM_ITER arg_iter;
     MDBM_ITER *parg_iter = &arg_iter;
     kvpair kv;
-    char *pretkey = NULL;
-    char *pretval = NULL;
+    PyObject *pretkey = NULL;
+    PyObject *pretval = NULL;
 
     rv = PyArg_ParseTuple(args, "|O", &previter);
     if (!rv) {
@@ -2016,30 +2026,36 @@ PyObject *pymdbm_next_r(register MDBMObj *pmdbm_link, PyObject *args) {
         _RETURN_FALSE();
     }
 
-    pretkey = copy_strptr(kv.key.dptr, kv.key.dsize);
+    pretkey = PyBytes_FromStringAndSize(kv.key.dptr, kv.key.dsize);
     if (pretkey == NULL) {
         _RETURN_FALSE();
     }
 
-    pretval = copy_strptr(kv.val.dptr, kv.val.dsize);
+    pretval = PyBytes_FromStringAndSize(kv.val.dptr, kv.val.dsize);
     if (pretval == NULL) {
+        Py_DECREF(pretkey);
         _RETURN_FALSE();
     }
 
     //make a return value include iter
     pretdic = get_iter_dict(parg_iter);
     if (pretdic == NULL) {
+        Py_DECREF(pretkey);
+        Py_DECREF(pretval);
         _RETURN_FALSE();
     }
 
-    rv = PyDict_SetItemString(pretdic, "key", _PYUNICODE_ANDSIZE(kv.key.dptr, kv.key.dsize));
+    rv = PyDict_SetItemString(pretdic, "key", pretkey);
+    Py_DECREF(pretkey);
     if (rv == -1) {
         PyErr_Format(PyExc_IOError, "mdbm::next_r does not make a return value (key)");
+        Py_DECREF(pretval);
         _RETURN_FALSE();
     }
 
 
-    rv = PyDict_SetItemString(pretdic, "val", _PYUNICODE_ANDSIZE(kv.val.dptr, kv.val.dsize));
+    rv = PyDict_SetItemString(pretdic, "val", pretval);
+    Py_DECREF(pretval);
     if (rv == -1) {
         PyErr_Format(PyExc_IOError, "mdbm::next_r does not make a return value (val)");
         _RETURN_FALSE();
@@ -2058,7 +2074,7 @@ PyObject *pymdbm_firstkey_r(register MDBMObj *pmdbm_link, PyObject *args) {
     MDBM_ITER arg_iter;
     MDBM_ITER *parg_iter = &arg_iter;
     datum key = {0x00,};
-    char *pretkey = NULL;
+    PyObject *pretkey = NULL;
 
     rv = PyArg_ParseTuple(args, "|O", &previter);
     if (!rv) {
@@ -2085,7 +2101,7 @@ PyObject *pymdbm_firstkey_r(register MDBMObj *pmdbm_link, PyObject *args) {
         _RETURN_FALSE();
     }
 
-    pretkey = copy_strptr(key.dptr, key.dsize);
+    pretkey = PyBytes_FromStringAndSize(key.dptr, key.dsize);
     if (pretkey == NULL) {
         _RETURN_FALSE();
     }
@@ -2093,10 +2109,12 @@ PyObject *pymdbm_firstkey_r(register MDBMObj *pmdbm_link, PyObject *args) {
     //make a return value include iter
     pretdic = get_iter_dict(parg_iter);
     if (pretdic == NULL) {
+        Py_DECREF(pretkey);
         _RETURN_FALSE();
     }
 
-    rv = PyDict_SetItemString(pretdic, "key", _PYUNICODE_ANDSIZE(key.dptr, key.dsize));
+    rv = PyDict_SetItemString(pretdic, "key", pretkey);
+    Py_DECREF(pretkey);
     if (rv == -1) {
         PyErr_Format(PyExc_IOError, "mdbm::firstkey_r does not make a return value (key)");
         _RETURN_FALSE();
@@ -2114,7 +2132,7 @@ PyObject *pymdbm_nextkey_r(register MDBMObj *pmdbm_link, PyObject *args) {
     MDBM_ITER arg_iter;
     MDBM_ITER *parg_iter = &arg_iter;
     datum key = {0x00,}; 
-    char *pretkey = NULL;
+    PyObject *pretkey = NULL;
 
     rv = PyArg_ParseTuple(args, "|O", &previter);
     if (!rv) {
@@ -2141,7 +2159,7 @@ PyObject *pymdbm_nextkey_r(register MDBMObj *pmdbm_link, PyObject *args) {
         _RETURN_FALSE();
     }
 
-    pretkey = copy_strptr(key.dptr, key.dsize);
+    pretkey = PyBytes_FromStringAndSize(key.dptr, key.dsize);
     if (pretkey == NULL) {
         _RETURN_FALSE();
     }
@@ -2149,10 +2167,12 @@ PyObject *pymdbm_nextkey_r(register MDBMObj *pmdbm_link, PyObject *args) {
     //make a return value include iter
     pretdic = get_iter_dict(parg_iter);
     if (pretdic == NULL) {
+        Py_DECREF(pretkey);
         _RETURN_FALSE();
     }
 
-    rv = PyDict_SetItemString(pretdic, "key", _PYUNICODE_ANDSIZE(key.dptr, key.dsize));
+    rv = PyDict_SetItemString(pretdic, "key", pretkey);
+    Py_DECREF(pretkey);
     if (rv == -1) {
         PyErr_Format(PyExc_IOError, "mdbm::nextkey_r does not make a return value (key)");
         _RETURN_FALSE();
