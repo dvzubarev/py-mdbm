@@ -102,6 +102,14 @@ static int org_stderr;
     }\
     _RETURN_FUNC(Py_True);\
 }
+#define _RETURN_WITH_ERRNO(rv) {\
+    if ((int)rv < 0){\
+        PyErr_SetFromErrno(MDBMError);\
+        return NULL;\
+    }\
+    _RETURN_TRUE();\
+}
+
 
 #if PY_MAJOR_VERSION >= 3
     struct module_state {
@@ -955,12 +963,7 @@ PyObject *pymdbm_store(register MDBMObj *pmdbm_link, PyObject *args, PyObject *k
         return NULL;
     }
 
-    if (rv != MDBM_STORE_SUCCESS) {
-        _RETURN_FALSE();
-    }
-
-
-    _RETURN_RV_BOOLEN(rv);
+    _RETURN_WITH_ERRNO(rv);
 }
 
 PyObject *pymdbm_store_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject *kwds) {
@@ -1009,13 +1012,15 @@ PyObject *pymdbm_store_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
     }
 
     if (rv != MDBM_STORE_SUCCESS) {
-        _RETURN_FALSE();
+        PyErr_SetFromErrno(MDBMError);
+        return NULL;
     }
 
     //make a return value include iter
     pretdic = get_iter_dict(parg_iter);
     if (pretdic == NULL) {
-        _RETURN_FALSE();
+        PyErr_SetString(MDBMError, "Internal error - pretdic_null");
+        return NULL;
     }
 
     Py_INCREF(pretdic);
@@ -1047,6 +1052,10 @@ PyObject *pymdbm_fetch(register MDBMObj *pmdbm_link, PyObject *args) {
     CAPTURE_END();
 
     if (val.dptr == NULL) {
+        if (errno != ENOENT){
+            PyErr_SetFromErrno(MDBMError);
+            return NULL;
+        }
         _RETURN_FALSE();
     }
  
@@ -1090,18 +1099,19 @@ PyObject *pymdbm_fetch_r(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
     rv = mdbm_fetch_r(pmdbm_link->pmdbm, &key, &val, parg_iter);
     CAPTURE_END();
 
-    if (rv == -1) {
-        _RETURN_FALSE();
-    }
-
-    if (val.dptr == NULL) {
+    if (rv == -1 || val.dptr == NULL) {
+        if (errno != ENOENT){
+            PyErr_SetFromErrno(MDBMError);
+            return NULL;
+        }
         _RETURN_FALSE();
     }
 
     //make a return value include iter
     pretdic = get_iter_dict(parg_iter);
     if (pretdic == NULL) {
-        _RETURN_FALSE();
+        PyErr_SetString(MDBMError, "Internal error - pretdic_null");
+        return NULL;
     }
 
     rv = PyDict_SetItemString(pretdic, "val", PyBytes_FromStringAndSize(val.dptr, val.dsize));
@@ -1394,7 +1404,7 @@ PyObject *pymdbm_delete(register MDBMObj *pmdbm_link, PyObject *args) {
     rv = mdbm_delete(pmdbm_link->pmdbm, key);
     CAPTURE_END();
 
-    _RETURN_RV_BOOLEN(rv);
+    _RETURN_WITH_ERRNO(rv);
 }
 
 PyObject *pymdbm_delete_r(register MDBMObj *pmdbm_link, PyObject *args) {
@@ -1426,7 +1436,7 @@ PyObject *pymdbm_delete_r(register MDBMObj *pmdbm_link, PyObject *args) {
     rv = mdbm_delete_r(pmdbm_link->pmdbm, parg_iter);
     CAPTURE_END();
 
-    _RETURN_RV_BOOLEN(rv);
+    _RETURN_WITH_ERRNO(rv);
 }
 
 PyObject *pymdbm_get_hash(register MDBMObj *pmdbm_link, PyObject *unused) {
@@ -2327,7 +2337,7 @@ PyObject *pymdbm_plock(register MDBMObj *pmdbm_link, PyObject *args, PyObject *k
     rv = mdbm_plock(pmdbm_link->pmdbm, &key, flags);
     CAPTURE_END();
 
-    _RETURN_RV_BOOLEN(rv);
+    _RETURN_WITH_ERRNO(rv);
 }
 
 PyObject *pymdbm_punlock(register MDBMObj *pmdbm_link, PyObject *args, PyObject *kwds) {
@@ -2359,7 +2369,7 @@ PyObject *pymdbm_punlock(register MDBMObj *pmdbm_link, PyObject *args, PyObject 
     rv = mdbm_punlock(pmdbm_link->pmdbm, &key, flags);
     CAPTURE_END();
 
-    _RETURN_RV_BOOLEN(rv);
+    _RETURN_WITH_ERRNO(rv);
 }
 
 PyObject *pymdbm_tryplock(register MDBMObj *pmdbm_link, PyObject *args, PyObject *kwds) {
