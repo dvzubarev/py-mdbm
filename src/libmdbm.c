@@ -195,7 +195,7 @@ static inline PyObject *get_iter_dict(MDBM_ITER *arg_iter) {
     PyObject *pretdic = NULL;
     PyObject *pretiter = NULL;
 
-    pretiter = Py_BuildValue("{sisi}", "m_pageno", arg_iter->m_pageno, "m_next", arg_iter->m_next);
+    pretiter = Py_BuildValue("{sIsi}", "m_pageno", arg_iter->m_pageno, "m_next", arg_iter->m_next);
     if (pretiter == NULL){
         PyErr_Format(PyExc_IOError, "mdbm::iter failed to construct iter object");
         return NULL;
@@ -218,89 +218,27 @@ static inline PyObject *get_iter_dict(MDBM_ITER *arg_iter) {
 
 static inline PyObject *get_db_info_dict(mdbm_db_info_t *info) {
 
-    int rv = -1;
     PyObject *pretdbinfo = NULL;
 
-    pretdbinfo = PyDict_New();
+    pretdbinfo = Py_BuildValue("{sIsIsIsIsIsIsIsIsIsIsssIsI}",
+                               "db_page_size", info->db_page_size,
+                               "db_num_pages", info->db_num_pages,
+                               "db_max_pages", info->db_max_pages,
+                               "db_num_dir_pages", info->db_num_dir_pages,
+                               "db_dir_width", info->db_dir_width,
+                               "db_max_dir_shift", info->db_max_dir_shift,
+                               "db_dir_min_level", info->db_dir_min_level,
+                               "db_dir_max_level", info->db_dir_max_level,
+                               "db_dir_num_nodes", info->db_dir_num_nodes,
+                               "db_hash_func", info->db_hash_func,
+                               "db_hash_funcname", info->db_hash_funcname,
+                               "db_spill_size", info->db_spill_size,
+                               "db_cache_mode", info->db_cache_mode);
+    if (pretdbinfo == NULL){
+        PyErr_Format(PyExc_IOError, "mdbm::info_dict failed to construct info object");
+        return NULL;
+    }
 
-    rv = PyDict_SetItemString(pretdbinfo, "db_page_size", Py_BuildValue("i", info->db_page_size));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_page_size)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_num_pages", Py_BuildValue("i", info->db_num_pages));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_num_pages)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_max_pages", Py_BuildValue("i", info->db_max_pages));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_max_pages)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_num_dir_pages", Py_BuildValue("i", info->db_num_dir_pages));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_num_dir_pages)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_dir_width", Py_BuildValue("i", info->db_dir_width));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_dir_width)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_max_dir_shift", Py_BuildValue("i", info->db_max_dir_shift));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_max_dir_shift)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_dir_min_level", Py_BuildValue("i", info->db_dir_min_level));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_dir_min_level)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_dir_max_level", Py_BuildValue("i", info->db_dir_max_level));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_dir_max_level)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_dir_num_nodes", Py_BuildValue("i", info->db_dir_num_nodes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_dir_num_nodes)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_hash_func", Py_BuildValue("i", info->db_hash_func));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_hash_func)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_hash_funcname", Py_BuildValue("i", info->db_hash_funcname));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_hash_funcname)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_spill_size", Py_BuildValue("i", info->db_spill_size));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_spill_size)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretdbinfo, "db_cache_mode", Py_BuildValue("i", info->db_cache_mode));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_info() does not make a return value(dbinfo->db_cache_mode)");
-        return NULL;
-    }
 
     return pretdbinfo;
 }
@@ -640,7 +578,7 @@ PyObject *pymdbm_init_iter(register MDBMObj *pmdbm_link, PyObject *unsed) {
 
     MDBM_ITER_INIT(&iter);
 
-    pretiter = Py_BuildValue("{sisi}", "m_pageno", iter.m_pageno, "m_next", iter.m_next);
+    pretiter = Py_BuildValue("{sIsi}", "m_pageno", iter.m_pageno, "m_next", iter.m_next);
     if (pretiter == NULL){
         PyErr_Format(PyExc_IOError, "mdbm::iter failed to construct iter object");
         return NULL;
@@ -2673,124 +2611,32 @@ PyObject *pymdbm_get_stats(register MDBMObj *pmdbm_link, PyObject *unused) {
         _RETURN_FALSE();
     }
 
-    pretstats = PyDict_New();
-
-    rv = PyDict_SetItemString(pretstats, "size", Py_BuildValue("i", s.s_size));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_size)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "num_entries", Py_BuildValue("i", s.s_num_entries));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_num_entries)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_num_entries", Py_BuildValue("i", s.s_large_num_entries));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_num_entries)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_num_free_entries", Py_BuildValue("i", s.s_large_num_free_entries));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_num_free_entries)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "cache_mode", Py_BuildValue("i", s.s_cache_mode));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_cache_mode)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "page_size", Py_BuildValue("i", s.s_page_size));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_page_size)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "pages_used", Py_BuildValue("i", s.s_pages_used));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_pages_used)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_pages_used", Py_BuildValue("i", s.s_large_pages_used));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_pages_used)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "page_count", Py_BuildValue("i", s.s_page_count));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_page_count)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_page_count", Py_BuildValue("i", s.s_large_page_count));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_page_count)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_page_size", Py_BuildValue("i", s.s_large_page_size));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_page_size)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_max_size", Py_BuildValue("i", s.s_large_max_size));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_max_size)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_min_size", Py_BuildValue("i", s.s_large_min_size));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_min_size)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_max_free", Py_BuildValue("i", s.s_large_max_free));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_max_free)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "min_level", Py_BuildValue("i", s.s_min_level));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_min_level)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "max_level", Py_BuildValue("i", s.s_max_level));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_max_level)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "bytes_used", Py_BuildValue("i", s.s_bytes_used));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_bytes_used)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_bytes_used", Py_BuildValue("i", s.s_large_bytes_used));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_bytes_used)");
-        return NULL;
-    }
-    rv = PyDict_SetItemString(pretstats, "large_threshold", Py_BuildValue("i", s.s_large_threshold));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_stats() does not make a return value (stats.s.s_large_threshold)");
+    pretstats = Py_BuildValue("{sIsIsIsIsIsIsIsIsIsIsIsIsIsIsIsIsIsIsI}",
+                              "size", s.s_size,
+                              "num_entries", s.s_num_entries,
+                              "large_num_entries", s.s_large_num_entries,
+                              "large_num_free_entries", s.s_large_num_free_entries,
+                              "cache_mode", s.s_cache_mode,
+                              "page_size", s.s_page_size,
+                              "pages_used", s.s_pages_used,
+                              "large_pages_used", s.s_large_pages_used,
+                              "page_count", s.s_page_count,
+                              "large_page_count", s.s_large_page_count,
+                              "large_page_size", s.s_large_page_size,
+                              "large_max_size", s.s_large_max_size,
+                              "large_min_size", s.s_large_min_size,
+                              "large_max_free", s.s_large_max_free,
+                              "min_level", s.s_min_level,
+                              "max_level", s.s_max_level,
+                              "bytes_used", s.s_bytes_used,
+                              "large_bytes_used", s.s_large_bytes_used,
+                              "large_threshold", s.s_large_threshold);
+    if (pretstats == NULL){
+        PyErr_Format(PyExc_IOError, "mdbm::get_stats() failed to construct stats object");
         return NULL;
     }
 
-    Py_INCREF(pretstats);
+    /* Py_INCREF(pretstats); */
     return pretstats;
 }
 
@@ -2950,10 +2796,10 @@ PyObject *pymdbm_get_db_stats(register MDBMObj *pmdbm_link, PyObject *args) {
         return NULL;
     }
 
-    if (flags != MDBM_STAT_NOLOCK && flags != MDBM_ITERATE_NOLOCK) {
-        PyErr_Format(MDBMError, "Error - mdbm::get_db_stats does not support flags(=%d)", flags);
-        return NULL;
-    }
+    /* if (flags != MDBM_STAT_NOLOCK && flags != MDBM_ITERATE_NOLOCK) { */
+    /*     PyErr_Format(MDBMError, "Error - mdbm::get_db_stats does not support flags(=%d)", flags); */
+    /*     return NULL; */
+    /* } */
 
     CAPTURE_START();
     rv = mdbm_get_db_stats(pmdbm_link->pmdbm, &info, &stats, flags);
@@ -2968,283 +2814,60 @@ PyObject *pymdbm_get_db_stats(register MDBMObj *pmdbm_link, PyObject *args) {
     pretdbinfo = get_db_info_dict(&info);
 
     //mdbm_stat_info_t to PyDict
-    pretstatsinfo = PyDict_New();
-    rv = PyDict_SetItemString(pretstatsinfo, "flags", Py_BuildValue("k", stats.flags));
-    if (rv == -1) {
+    pretstatsinfo = Py_BuildValue("{sisKsKsKsKsKsKsksksksksksksksksksksksksksksksksk}",
+                                  "flags", stats.flags,
+                                  "num_active_entries", stats.num_active_entries,
+                                  "num_active_lob_entries", stats.num_active_lob_entries,
+                                  "sum_key_bytes", stats.sum_key_bytes,
+                                  "sum_lob_val_bytes", stats.sum_lob_val_bytes,
+                                  "sum_normal_val_bytes", stats.sum_normal_val_bytes,
+                                  "sum_overhead_bytes", stats.sum_overhead_bytes,
+                                  "min_entry_bytes", stats.min_entry_bytes,
+                                  "max_entry_bytes", stats.max_entry_bytes,
+                                  "min_key_bytes", stats.min_key_bytes,
+                                  "max_key_bytes", stats.max_key_bytes,
+                                  "min_val_bytes", stats.min_val_bytes,
+                                  "max_val_bytes", stats.max_val_bytes,
+                                  "min_lob_bytes", stats.min_lob_bytes,
+                                  "max_lob_bytes", stats.max_lob_bytes,
+                                  "max_page_used_space", stats.max_page_used_space,
+                                  "max_data_pages", stats.max_data_pages,
+                                  "num_free_pages", stats.num_free_pages,
+                                  "num_active_pages", stats.num_active_pages,
+                                  "num_normal_pages", stats.num_normal_pages,
+                                  "num_oversized_pages", stats.num_oversized_pages,
+                                  "num_lob_pages", stats.num_lob_pages,
+                                  "max_page_entries", stats.max_page_entries,
+                                  "min_page_entries", stats.min_page_entries);
+    if (pretstatsinfo == NULL){
         Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.flags)");
+        PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() failed to construct stats object");
         return NULL;
     }
 
-    rv = PyDict_SetItemString(pretstatsinfo, "num_active_entries", Py_BuildValue("k", stats.num_active_entries));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.num_active_entries)");
-        return NULL;
-    }
 
-    rv = PyDict_SetItemString(pretstatsinfo, "num_active_lob_entries", Py_BuildValue("k", stats.num_active_lob_entries));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.num_active_lob_entries)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "sum_key_bytes", Py_BuildValue("k", stats.sum_key_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.sum_key_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "sum_lob_val_bytes", Py_BuildValue("k", stats.sum_lob_val_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.sum_lob_val_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "sum_normal_val_bytes", Py_BuildValue("k", stats.sum_normal_val_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.sum_normal_val_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "sum_overhead_bytes", Py_BuildValue("k", stats.sum_overhead_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.sum_overhead_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "min_entry_bytes", Py_BuildValue("l", stats.min_entry_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.min_entry_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "max_entry_bytes", Py_BuildValue("l", stats.max_entry_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.max_entry_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "min_key_bytes", Py_BuildValue("l", stats.min_key_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.min_key_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "max_key_bytes", Py_BuildValue("l", stats.max_key_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.max_key_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "min_val_bytes", Py_BuildValue("l", stats.min_val_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.min_val_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "max_val_bytes", Py_BuildValue("l", stats.max_val_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.max_val_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "min_lob_bytes", Py_BuildValue("l", stats.min_lob_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.min_lob_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "max_lob_bytes", Py_BuildValue("l", stats.max_lob_bytes));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.max_lob_bytes)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "max_page_used_space", Py_BuildValue("l", stats.max_page_used_space));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.max_page_used_space)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "max_data_pages", Py_BuildValue("l", stats.max_data_pages));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.max_data_pages)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "num_free_pages", Py_BuildValue("l", stats.num_free_pages));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.num_free_pages)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "num_active_pages", Py_BuildValue("l", stats.num_active_pages));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.num_active_pages)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "num_normal_pages", Py_BuildValue("l", stats.num_normal_pages));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.num_normal_pages)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "num_oversized_pages", Py_BuildValue("l", stats.num_oversized_pages));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.num_oversized_pages)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "num_lob_pages", Py_BuildValue("l", stats.num_lob_pages));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.num_lob_pages)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "max_page_entries", Py_BuildValue("l", stats.max_page_entries));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.max_page_entries)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstatsinfo, "min_page_entries", Py_BuildValue("l", stats.min_page_entries));
-    if (rv == -1) {
-        Py_DECREF(pretdbinfo);
-        Py_DECREF(pretstatsinfo);
-        PyErr_Format(PyExc_IOError, "mdbm::get_db_stats() does not make a return value(stats.min_page_entries)");
-        return NULL;
-    }
 
     pretbucket = PyList_New(0);
     for (i=0; i<listlen; i++) {
 
-        ptempbucket = PyDict_New();
 
-        rv = PyDict_SetItemString(ptempbucket, "num_pages", Py_BuildValue("l", stats.buckets[i].num_pages));
-        if (rv == -1) {
+        ptempbucket = Py_BuildValue("{sksksksksksKsKsK}",
+                                    "num_pages", stats.buckets[i].num_pages,
+                                    "min_bytes", stats.buckets[i].min_bytes,
+                                    "max_bytes", stats.buckets[i].max_bytes,
+                                    "min_free_bytes", stats.buckets[i].min_free_bytes,
+                                    "max_free_bytes", stats.buckets[i].max_free_bytes,
+                                    "sum_entries", stats.buckets[i].sum_entries,
+                                    "sum_bytes", stats.buckets[i].sum_bytes,
+                                    "sum_free_bytes", stats.buckets[i].sum_free_bytes);
+        if (ptempbucket == NULL){
             Py_DECREF(pretdbinfo);
             Py_DECREF(pretstatsinfo);
-            Py_DECREF(ptempbucket);
             Py_DECREF(pretbucket);
-            PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() doest not make a resturn value(stats.buckets[%d].num_pages)", i);
+            PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() failed to construct bucket object");
             return NULL;
         }
 
-        rv = PyDict_SetItemString(ptempbucket, "min_bytes", Py_BuildValue("l", stats.buckets[i].min_bytes));
-        if (rv == -1) {
-            Py_DECREF(pretdbinfo);
-            Py_DECREF(pretstatsinfo);
-            Py_DECREF(ptempbucket);
-            Py_DECREF(pretbucket);
-            PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() doest not make a resturn value(stats.buckets[%d].min_bytes)", i);
-            return NULL;
-        }
-
-        rv = PyDict_SetItemString(ptempbucket, "max_bytes", Py_BuildValue("l", stats.buckets[i].max_bytes));
-        if (rv == -1) {
-            Py_DECREF(pretdbinfo);
-            Py_DECREF(pretstatsinfo);
-            Py_DECREF(ptempbucket);
-            Py_DECREF(pretbucket);
-            PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() doest not make a resturn value(stats.buckets[%d].max_bytes)", i);
-            return NULL;
-        }
-
-        rv = PyDict_SetItemString(ptempbucket, "min_free_bytes", Py_BuildValue("l", stats.buckets[i].min_free_bytes));
-        if (rv == -1) {
-            Py_DECREF(pretdbinfo);
-            Py_DECREF(pretstatsinfo);
-            Py_DECREF(ptempbucket);
-            Py_DECREF(pretbucket);
-            PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() doest not make a resturn value(stats.buckets[%d].min_free_bytes)", i);
-            return NULL;
-        }
-
-        rv = PyDict_SetItemString(ptempbucket, "max_free_bytes", Py_BuildValue("l", stats.buckets[i].max_free_bytes));
-        if (rv == -1) {
-            Py_DECREF(pretdbinfo);
-            Py_DECREF(pretstatsinfo);
-            Py_DECREF(ptempbucket);
-            Py_DECREF(pretbucket);
-            PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() doest not make a resturn value(stats.buckets[%d].max_free_bytes)", i);
-            return NULL;
-        }
-
-        rv = PyDict_SetItemString(ptempbucket, "sum_entries", Py_BuildValue("k", stats.buckets[i].sum_entries));
-        if (rv == -1) {
-            Py_DECREF(pretdbinfo);
-            Py_DECREF(pretstatsinfo);
-            Py_DECREF(ptempbucket);
-            Py_DECREF(pretbucket);
-            PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() doest not make a resturn value(stats.buckets[%d].sum_entries)", i);
-            return NULL;
-        }
-
-        rv = PyDict_SetItemString(ptempbucket, "sum_bytes", Py_BuildValue("k", stats.buckets[i].sum_bytes));
-        if (rv == -1) {
-            Py_DECREF(pretdbinfo);
-            Py_DECREF(pretstatsinfo);
-            Py_DECREF(ptempbucket);
-            Py_DECREF(pretbucket);
-            PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() doest not make a resturn value(stats.buckets[%d].sum_bytes)", i);
-            return NULL;
-        }
-
-        rv = PyDict_SetItemString(ptempbucket, "sum_free_bytes", Py_BuildValue("k", stats.buckets[i].sum_free_bytes));
-        if (rv == -1) {
-            Py_DECREF(pretdbinfo);
-            Py_DECREF(pretstatsinfo);
-            Py_DECREF(ptempbucket);
-            Py_DECREF(pretbucket);
-            PyErr_Format(PyExc_IOError, "mdbm::get_db_stat() doest not make a resturn value(stats.buckets[%d].sum_free_bytes)", i);
-            return NULL;
-        }
 
         rv = PyList_Append(pretbucket, ptempbucket);
         if (rv == -1) {
@@ -3295,7 +2918,7 @@ PyObject *pymdbm_get_db_stats(register MDBMObj *pmdbm_link, PyObject *args) {
     Py_DECREF(pretstatsinfo);
     Py_DECREF(pretbucket);
 
-    Py_INCREF(pretval);
+    /* Py_INCREF(pretval); */
     return pretval;
 }
 
@@ -3313,36 +2936,17 @@ PyObject *pymdbm_get_window_stats(register MDBMObj *pmdbm_link, PyObject *unused
     }
 
     //mdbm_window_stats_t to PyDict
-    pretstats = PyDict_New();
-    rv = PyDict_SetItemString(pretstats, "num_reused", Py_BuildValue("k", stats.w_num_reused));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_window_stats() does not make a return value(windows_stats.num_reused)");
+    pretstats = Py_BuildValue("{sKsKsksk}",
+                              "num_reused", stats.w_num_reused,
+                              "num_remapped", stats.w_num_remapped,
+                              "window_size", stats.w_window_size,
+                              "max_window_used", stats.w_max_window_used);
+    if (pretstats == NULL){
+        PyErr_Format(PyExc_IOError, "mdbm::window_stat failed to construct stats object");
         return NULL;
     }
 
-    rv = PyDict_SetItemString(pretstats, "num_remapped", Py_BuildValue("k", stats.w_num_remapped));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_window_stats() does not make a return value(windows_stats.num_remapped)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstats, "window_size", Py_BuildValue("l", stats.w_window_size));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_window_stats() does not make a return value(windows_stats.window_size)");
-        return NULL;
-    }
-
-    rv = PyDict_SetItemString(pretstats, "max_window_used", Py_BuildValue("l", stats.w_max_window_used));
-    if (rv == -1) {
-        Py_DECREF(pretstats);
-        PyErr_Format(PyExc_IOError, "mdbm::get_window_stats() does not make a return value(windows_stats.max_window_used)");
-        return NULL;
-    }
-
-    Py_INCREF(pretstats);
+    /* Py_INCREF(pretstats); */
     return pretstats;
 }
 
