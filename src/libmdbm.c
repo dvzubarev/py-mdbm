@@ -589,7 +589,7 @@ PyObject *pymdbm_init_iter(register MDBMObj *pmdbm_link, PyObject *unsed) {
 
 PyObject *pymdbm_open(PyObject *self, PyObject *args, PyObject *kwds) {
 
-    const char *pfn = NULL;
+    char *pfn = NULL;
     int flags = 0;
     int mode = 0;
     int psize = 0;
@@ -601,7 +601,6 @@ PyObject *pymdbm_open(PyObject *self, PyObject *args, PyObject *kwds) {
     static char *pkwlist[] = {"path", "flags", "mode", "psize", "presize", NULL};
     rv = PyArg_ParseTupleAndKeywords(args, kwds, "sii|ii", pkwlist, &pfn, &flags, &mode, &psize, &presize);
     if (!rv) {
-        PyErr_SetString(MDBMError, "Error - There was a missing parameter: filepath and flags and mode");
         return NULL;
     }
 
@@ -664,6 +663,7 @@ PyObject *pymdbm_dup_handle(register MDBMObj *pmdbm_link, PyObject *args) {
         Py_DECREF(pmdbm_dup_link);
         return NULL;
     }
+
 
     Py_INCREF(pmdbm_dup_link);
     return (PyObject *)pmdbm_dup_link;
