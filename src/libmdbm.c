@@ -1810,18 +1810,7 @@ PyObject *pymdbm_firstkey(register MDBMObj *pmdbm_link, PyObject *unused) {
         _RETURN_FALSE();
     }
 
-    pretkey = PyBytes_FromStringAndSize(key.dptr, key.dsize);
-    if (pretkey == NULL) {
-        _RETURN_FALSE();
-    }
-
-
-    retval = PyTuple_New(1);
-    PyTuple_SetItem(retval, 0, pretkey);
-
-    //Py_DECREF(retval);
-
-    return retval;
+    return PyBytes_FromStringAndSize(key.dptr, key.dsize);
 }
 
 PyObject *pymdbm_nextkey(register MDBMObj *pmdbm_link, PyObject *unused) {
@@ -1837,17 +1826,8 @@ PyObject *pymdbm_nextkey(register MDBMObj *pmdbm_link, PyObject *unused) {
         _RETURN_FALSE();
     }
 
-    pretkey = PyBytes_FromStringAndSize(key.dptr, key.dsize);
-    if (pretkey == NULL) {
-        _RETURN_FALSE();
-    }
 
-
-    retval = PyTuple_New(1);
-    PyTuple_SetItem(retval, 0, pretkey);
-    //Py_DECREF(retval);
-
-    return retval;
+    return PyBytes_FromStringAndSize(key.dptr, key.dsize);
 }
 
 PyObject *pymdbm_first_r(register MDBMObj *pmdbm_link, PyObject *args) {
